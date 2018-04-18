@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html>
+<title>Function Apps - SQL CRUD Demo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<link rel="stylesheet" href="css/w3.css">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+<script src="scripts/jquery-1.10.2.js"></script>
+<script>
+     $(document).ready(function () {
+         loadCategory();
+              });
+
+    function loadCategory() {
+        $("#categoryTable").find("tr:gt(0)").remove();
+        $.getJSON("https://sql-interface-sera-dev.azurewebsites.net/api/Category",
+            function (data) {
+                console.log(data);
+                $.each(data.Data, function (index, itemData) {
+                    var tblRow = `<tr>
+                                    <td>
+                                        `+itemData.Name+`
+                                    </td>
+                                    <td>
+                                        `+itemData.Description+`
+                                    </td>
+                                    <td>
+                                        <input type='button' style="width:80px;" value="Update" class="w3-button w3-blue" onclick='updateClick(`+itemData.Id+`);'/>
+                                        <input type='button' style="width:80px;" value="Delete" class="w3-button w3-red" onclick='openModalConfirm(`+itemData.Id+`);'/>
+                                    </td>
+                                    </tr>`;
+                    $("#categoryTable").append(tblRow);
+                });
+            });
+    }
+
+    function insertCategory()
+    {
+        $("#catid").val('');
+        if(validate() == false)
+        {
+            openModal("Please fill all required data..");
+            return false;
+        }
+        var name = $("#catName").val();
+        var desc = $("#catDesc").val();
+        var user = $("#catUser").val();
+        var json = '{"name":"'+name+'","description":"'+desc+'","userid":"'+user+'"}';
+        console.log(json);
+        $.ajax({
+                url: 'https://sql-interface-sera-dev.azurewebsites.net/api/Category',
+                data: json,
+                contentType: "application/json; charset=utf-8",
+                type: 'POST',
+                async: false,
+                success: function(data){openModalSuccess('Category saved successfully'),loadCategory();reset();},
+                failure: function(errMsg) {
+                    alert(errMsg);
+                }
+        });
+        return false;
+    }
+
+    function deleteCategory(id)
+    {
+        console.log(id);
+        var json = '{"id":"'+id+'","userid":"1"}';
+        console.log(json);
+        $.ajax({
+                url: 'https://sql-interface-sera-dev.azurewebsites.net/api/Category',
+                data: json,
+                contentType: "application/json; charset=utf-8",
+                type: 'DELETE',
+                async: false,
+                success: function(data){closeModal();loadCategory();openModalSuccess('Category deleted successfully');},
+                failure: function(errMsg) {
+                    alert(errMsg);
+                }
+        });
+        reset();
+        return false;
+    }
+
+    function updateClick(id)
+    {
+        console.log(id);
+        $("#catid").val(id);
+        $.getJSON("https://sql-interface-sera-dev.azurewebsites.net/api/Category?id="+id,
+            function (data) {
+                console.log(data);
+                $.each(data.Data, function (index, itemData) {
+                    $("#catName").val(itemData.Name);
+                    $("#catDesc").val(itemData.Description); 
+                });
+            });
+        $("html, body").animate({ scrollTop: 0 }, "slow");
+    }
+
+    function openModalSuccess(text)
+    {
+        var modal = document.getElementById('modal-notification-success');
+        var span = document.getElementById('modal-label-success');
+        span.innerHTML = text;
+        span.textContent = text;
+        modal.style.display='block';
+    }
+
+    function openModal(text)
+    {
+        var modal = document.getElementById('modal-notification');
+        var span = document.getElementById('modal-label');
+        span.innerHTML = text;
+        span.textContent = text;
+        modal.style.display='block';
+    }
+
+    function openModalConfirm(id)
+    {
+        var modal = document.getElementById('modal-confirmation');
+        var span = document.getElementById('modal-confirm-label');
+        var btn = document.getElementById('btnYes');
+        btn.addEventListener('click', function() {
+            deleteCategory(id);
+        }, false);
+        span.innerHTML = "Are you sure to delete this Category?";
+        span.textContent = "Are you sure to delete this Category?";
+        modal.style.display='block';
+    }
+
+    function closeModal(text)
+    {
+        var modal = document.getElementById('modal-confirmation');
+        modal.style.display='none';
+    }
+
+
+    function updateCategory()
+    {
+        var id = $("#catid").val();
+        if(id == "")
+        {
+            openModal("Please select category..");
+            return false;
+        }
+        if(validate() == false)
+        {
+            openModal("Please fill all required data..");
+            return false;
+        }
+        var name = $("#catName").val();
+        var desc = $("#catDesc").val();
+        var user = $("#catUser").val();
+        console.log(id);
+        console.log(name);
+        console.log(desc);
+        console.log(user);
+        var json = '{"id":"'+id+'","name":"'+name+'","description":"'+desc+'","userid":"'+user+'"}';
+        console.log(json);
+        $.ajax({
+                url: 'https://sql-interface-sera-dev.azurewebsites.net/api/Category',
+                data: json,
+                contentType: "application/json; charset=utf-8",
+                type: 'PUT',
+                async: false,
+                success: function(data){openModalSuccess('Category updated successfully'),loadCategory();reset();},
+                failure: function(errMsg) {
+                    alert(errMsg);
+                }
+        });
+        return false;
+    }
+
+    function reset()
+    {
+        var id = $("#catid").val('');
+        var name = $("#catName").val('');
+        var desc = $("#catDesc").val('');
+        var user = $("#catUser").val('');
+    }
+
+    function validate()
+    {
+        var name = $("#catName").val();
+        var desc = $("#catDesc").val();
+        var user = $("#catUser").val();
+        if(name == "")
+        {
+            return false;
+        }
+        if(desc == "")
+        {
+            return false;
+        }
+        if(user == "")
+        {
+            return false;
+        }
+    }
+</script>
+<style>
+html,body,h1,h2,h3,h4,h5 {font-family: "Roboto", sans-serif}
+</style>
+<body class="w3-light-grey">
+
+<!-- Top container -->
+<div class="w3-bar w3-top w3-black w3-large" style="z-index:4">
+  <button class="w3-bar-item w3-button w3-hide-large w3-hover-none w3-hover-text-light-grey" onclick="w3_open();"><i class="fa fa-bars"></i>&nbsp;&nbsp;Menu</button>
+  <span class="w3-bar-item w3-right">Function App - SQL&nbsp;&nbsp;<i class="fa fa-cog"></i></span>
+</div>
+
+<!-- Sidebar/menu -->
+<nav class="w3-sidebar w3-collapse w3-white w3-animate-left" style="z-index:3;width:300px;" id="mySidebar"><br>
+  <div class="w3-container w3-row">
+    <div class="w3-col s4">
+      <img src="images/avatar2.png" class="w3-circle w3-margin-right" style="width:46px">
+    </div>
+    <div class="w3-col s8 w3-bar">
+      <span>Welcome, <strong>User</strong></span><br>
+      SQL CRUD Demo
+    </div>
+  </div>
+  <hr>
+  <div class="w3-container">
+    <h5>Dashboard</h5>
+  </div>
+  <div class="w3-bar-block">
+    <a href="#" class="w3-bar-item w3-button w3-padding-16 w3-hide-large w3-dark-grey w3-hover-black" onclick="w3_close()" title="close menu"><i class="fa fa-remove fa-fw"></i>  Close Menu</a>
+    <a href="#" class="w3-bar-item w3-button w3-padding w3-blue"><i class="fa fa-archive fa-fw"></i>  Category</a><br><br>
+  </div>
+</nav>
+
+
+<!-- Overlay effect when opening sidebar on small screens -->
+<div class="w3-overlay w3-hide-large w3-animate-opacity" onclick="w3_close()" style="cursor:pointer" title="close side menu" id="myOverlay"></div>
+
+<!-- !PAGE CONTENT! -->
+<div class="w3-main" style="margin-left:300px;margin-top:43px;">
+
+  <!-- Header -->
+  <header class="w3-container" style="padding-top:22px">
+    <h5><b><i class="fa fa-archive"></i> Category</b></h5>
+  </header>
+
+  <div class="w3-container">
+      <form onsubmit="return false;">
+        <div class="w3-row w3-padding">
+          <div class="w3-col m2 text-center">
+              Name
+          </div>
+          <div class="w3-col m10 w3-container">
+            <input id="catid" type="hidden"/>
+            <input id="catName" type="text" class="w3-input"/>
+          </div>
+        </div>
+        <div class="w3-row w3-padding">
+          <div class="w3-col m2 text-center">
+              Description
+          </div>
+          <div class="w3-col m10 w3-container">
+            <input id="catDesc" type="text" class="w3-input"/>
+          </div>
+        </div>
+        <div class="w3-row w3-padding">
+          <div class="w3-col m2 text-center">
+              User Id
+          </div>
+          <div class="w3-col m10 w3-container">
+            <input id="catUser" type="number" class="w3-input"/>
+          </div>
+        </div>
+        <div class="w3-row w3-padding">
+          <div class="w3-col m6 text-center">
+                <input class="w3-button w3-green" style="width:90px;" type="submit" value="Submit" id="btnSubmit" onclick="insertCategory();">
+                <input class="w3-button w3-blue" style="width:90px;" type="submit" value="Update" id="btnUpdate" onclick="updateCategory();">
+                <input class="w3-button w3-deep-orange" style="width:90px;" type="submit" value="Reset" id="btnReset" onclick="reset();">
+          </div>
+        </div>
+    </form>
+    </div>
+    <br>
+  <div class="w3-container">
+    <table class="w3-table w3-striped w3-bordered w3-border w3-hoverable w3-white" id="categoryTable">
+      <tr>
+        <th>Category</th>
+        <th>Description</th>
+        <th>Action</th>
+      </tr>
+    </table><br>
+  </div>
+  <hr>
+
+  <br>
+  <div class="w3-container w3-dark-grey w3-padding-32">
+    <div class="w3-row">
+      <div class="w3-container w3-third">
+        <h5 class="w3-bottombar w3-border-green">Category</h5>
+        <p>Create</p>
+        <p>Read</p>
+        <p>Update</p>
+        <p>Delete</p>
+      </div>
+    </div>
+  </div>
+
+  <div id="modal-notification" class="w3-modal">
+        <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+          <header class="w3-container w3-red"> 
+            <span onclick="document.getElementById('modal-notification').style.display='none'" 
+            class="w3-button w3-display-topright">&times;</span>
+            <h3>Notification</h2>
+          </header>
+          <div class="w3-container">
+              <h4><span id="modal-label"></span></h2>
+          </div>
+          <footer class="w3-container w3-red">
+              <p></p>
+          </footer>
+        </div>
+      </div>
+
+    <div id="modal-confirmation" class="w3-modal">
+        <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+          <header class="w3-container w3-deep-orange"> 
+            <span onclick="document.getElementById('modal-confirmation').style.display='none'" 
+            class="w3-button w3-display-topright">&times;</span>
+            <h3>Confirmation</h2>
+          </header>
+          <div class="w3-container w3-padding">
+              <h4><span id="modal-confirm-label"></span></h2>
+                <input class="w3-button w3-green" style="width:80px;" type="button" value="Yes" id="btnYes">
+                <input class="w3-button w3-red"  style="width:80px;" type="button" value="No" id="btnNo" onclick="closeModal();">
+          </div>
+          <footer class="w3-container w3-deep-orange">
+              <p></p>
+          </footer>
+        </div>
+      </div>
+
+      <div id="modal-notification-success" class="w3-modal">
+            <div class="w3-modal-content w3-card-4 w3-animate-zoom">
+              <header class="w3-container w3-green"> 
+                <span onclick="document.getElementById('modal-notification-success').style.display='none'" 
+                class="w3-button w3-display-topright">&times;</span>
+                <h3>Process Complete</h2>
+              </header>
+              <div class="w3-container w3-padding">
+                  <h4><span id="modal-label-success"></span></h2>
+              </div>
+              <footer class="w3-container w3-green">
+                  <p></p>
+              </footer>
+            </div>
+          </div>
+  <!-- End page content -->
+</div>
+
+<script>
+// Get the Sidebar
+var mySidebar = document.getElementById("mySidebar");
+
+// Get the DIV with overlay effect
+var overlayBg = document.getElementById("myOverlay");
+
+// Toggle between showing and hiding the sidebar, and add overlay effect
+function w3_open() {
+    if (mySidebar.style.display === 'block') {
+        mySidebar.style.display = 'none';
+        overlayBg.style.display = "none";
+    } else {
+        mySidebar.style.display = 'block';
+        overlayBg.style.display = "block";
+    }
+}
+
+// Close the sidebar with the close button
+function w3_close() {
+    mySidebar.style.display = "none";
+    overlayBg.style.display = "none";
+}
+
+var modal = document.getElementById('modal-notification');
+var modalcon = document.getElementById('modal-confirmation');
+var modalsuc = document.getElementById('modal-notification-success');
+
+window.onclick = function(event) {
+    if (event.target == modal) {
+        modal.style.display = "none";
+    }
+    if (event.target == modalcon) {
+        modalcon.style.display = "none";
+    }
+    if (event.target == modalsuc) {
+        modalsuc.style.display = "none";
+    }
+}
+</script>
+
+</body>
+</html>
